@@ -3,17 +3,21 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon ./dist/server.js"
+    "start": "nodemon ./dist/server.js",
+    "typescript": "tsc -w"
   },
   "author": "Abhijit Mahato",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "body-parser": "^1.20.2",
+    "dotenv": "^16.4.4",
     "express": "^4.18.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
-    "@types/node": "^20.11.19"
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.11.19",
+    "morgan": "^1.10.0"
   }
 }

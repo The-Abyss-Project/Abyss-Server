@@ -3,21 +3,22 @@ import dotenv from "dotenv";
 import express from "express";
 import morgan from "morgan";
 
-import globalErrorHandler from "./controllers/error";
+import globalErrorHandler from "./controllers/errorController";
 import ApiError from "./models/appError";
+import userRouter from "./routes/userRoutes";
 
 dotenv.config();
 const app = express();
 
 // Middlewares
-app.use(bodyParser.json());
-
 if (process.env.NODE_ENV === "development") {
   console.log("Morgan enabled...");
   app.use(morgan("dev"));
-} 
+}
+app.use(bodyParser.json());
 
 // Routes
+app.use("/api/v1/users", userRouter);
 
 // Not found route
 app.all("*", (req, res, next) => {

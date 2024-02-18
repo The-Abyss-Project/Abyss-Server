@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 // Handle uncaught exceptions
 process.on("uncaughtException", err => {
   console.log("Uncaught Exception 💣 Shutting down...");
@@ -7,6 +9,12 @@ process.on("uncaughtException", err => {
 
 import app from "./app";
 
+// Connect to database
+mongoose.connect(process.env.DATABASE_URL!).then(() => {
+  console.log("Database connected...");
+});
+
+// Start server
 const port = process.env.PORT || 3000;
 
 const server = app.listen(port, () => {

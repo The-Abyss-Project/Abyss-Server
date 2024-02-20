@@ -1,4 +1,5 @@
 import bodyParser from "body-parser";
+import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import morgan from "morgan";
@@ -11,6 +12,7 @@ dotenv.config();
 const app = express();
 
 // Middlewares
+app.use(cors());
 if (process.env.NODE_ENV === "development") {
   console.log("Morgan enabled...");
   app.use(morgan("dev"));

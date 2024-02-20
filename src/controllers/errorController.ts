@@ -1,4 +1,4 @@
-import { ErrorRequestHandler } from "express";
+import { ErrorRequestHandler, Request } from "express";
 import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import { MongoServerError } from "mongodb";
 import { Error } from "mongoose";
@@ -58,6 +58,7 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   error.isOperational = err.isOperational || false;
 
   if (process.env.NODE_ENV === "development") {
+    console.log(err);
     sendErrorDev(error, req, res, next);
   } else if (process.env.NODE_ENV === "production") {
     if (err instanceof MongoServerError && err.code === 11000)

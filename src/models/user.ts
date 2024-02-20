@@ -1,21 +1,6 @@
 import bcrypt from "bcrypt";
-import { Timestamp } from "mongodb";
-import { Model, model, Schema } from "mongoose";
-
-export interface IUser {
-  name: string;
-  photo?: string;
-  email: string;
-  password: string;
-  passwordChangedAt: Date;
-}
-
-interface IUserMethods {
-  checkPassword: (password: string, hashedPassword: string) => Promise<boolean>;
-  checkPasswordChangedAfter: (jwtTimestamp: Date) => boolean;
-}
-
-type UserModel = Model<IUser, {}, IUserMethods>;
+import { model, Query, Schema } from "mongoose";
+import { IUser, IUserMethods, Role, UserModel } from "../types/user";
 
 const userSchema = new Schema<IUser, UserModel, IUserMethods>({
   name: {
@@ -28,12 +13,24 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     type: String,
     required: [true, "Please provide your email"],
     unique: true,
+    validate: {
+      validator: function (value: string) {
+        const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
+        return emailRegex.test(value);
+      },
+      message: "Please provide a valid email address",
+    },
   },
   password: {
     type: String,
     select: false,
     required: [true, "Please provide a password"],
     minlength: 8,
+  },
+  role: {
+    type: String,
+    enum: Role,
+    default: Role.USER,
   },
   passwordChangedAt: Date,
 });
@@ -42,6 +39,11 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
   this.password = await bcrypt.hash(this.password, +process.env.SALT_ROUNDS!);
+  next();
+});
+
+userSchema.pre(/^find/, function (next) {
+  if (this instanceof Query) this.select("-__v");
   next();
 });
 

@@ -1,12 +1,9 @@
-import { RequestHandler } from "express";
-import AppError from "../models/appError";
-import User, { IUser } from "../models/user";
+import User from "../models/user";
+import { AuthRequestHandler } from "../types/auth";
 import catchAsync from "../utils/catchAsync";
+import { UpdateOne, deleteOne, findAll, findOne } from "./handleFactory";
 
-export const getAllUsers: RequestHandler = catchAsync(
-  async (req, res, next) => {
-    const users = await User.find().select("-__v");
-
-    res.status(200).json(users);
-  }
-);
+export const getAllUsers = findAll(User);
+export const getUser = findOne(User);
+export const updateUser = UpdateOne(User);
+export const deleteUser = deleteOne(User);

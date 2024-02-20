@@ -1,14 +1,12 @@
-import { RequestHandler } from "express";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import jwt from "jsonwebtoken";
 
 import { Types } from "mongoose";
 import AppError from "../models/appError";
-import User, { IUser } from "../models/user";
+import User from "../models/user";
+import { AuthRequest, JWTPayload } from "../types/auth";
+import { IUser, Role } from "../types/user";
 import catchAsync from "../utils/catchAsync";
-
-interface JwtPayload extends jwt.JwtPayload {
-  userId: string;
-}
 
 const signToken = (id: Types.ObjectId) => {
   return jwt.sign({ userId: id }, process.env.JWT_SECRET_KEY!, {
@@ -43,30 +41,47 @@ export const login: RequestHandler = catchAsync(async (req, res, next) => {
   res.status(200).json({ token });
 });
 
-export const isAuth: RequestHandler = catchAsync(async (req, res, next) => {
-  let token = "";
+export const isAuth: RequestHandler = catchAsync(
+  async (req: AuthRequest, res, next) => {
+    let token = "";
 
-  const authorization = req.headers.authorization;
-  if (authorization && authorization.startsWith("Bearer")) {
-    token = authorization.split(" ")[1];
+    const authorization = req.headers.authorization;
+    if (authorization && authorization.startsWith("Bearer")) {
+      token = authorization.split(" ")[1];
+    }
+
+    if (!token) throw new AppError("Please login to get access!", 401);
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET_KEY!
+    ) as JWTPayload;
+
+    const user = await User.findById(decoded.userId).select("-__v");
+    if (!user)
+      throw new AppError(
+        "User belonging to this token does no longer exist!",
+        401
+      );
+
+    if (user.checkPasswordChangedAfter(new Date(decoded.iat! * 1000)))
+      throw new AppError(
+        "User recently changed password. Please login again!",
+        401
+      );
+    req.user = user;
+    next();
   }
+);
 
-  if (!token) throw new AppError("Please login to get access!", 401);
+export const allowFor = (...roles: Role[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!roles.includes(req.user!.role))
+      throw new AppError(
+        "You do not have permission to perform this action!",
+        403
+      );
 
-  const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as JwtPayload;
-
-  const user = await User.findById(decoded.userId);
-  if (!user)
-    throw new AppError(
-      "User belonging to this token does no longer exist!",
-      401
-    );
-
-  if (user.checkPasswordChangedAfter(new Date(decoded.iat! * 1000)))
-    throw new AppError(
-      "User recently changed password. Please login again!",
-      401
-    );
-
-  next();
-});
+    next();
+  };
+};

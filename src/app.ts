@@ -1,23 +1,32 @@
-import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
 import morgan from "morgan";
 
-import globalErrorHandler from "./controllers/errorController";
-import ApiError from "./models/appError";
-import userRouter from "./routes/userRoutes";
+import path from "path";
+import globalErrorHandler from "./controllers/error.controller.js";
+import userRouter from "./routes/user.route.js";
+import ApiError from "./utils/ApiError.js";
 
-dotenv.config();
+const __dirname = path.resolve();
 const app = express();
 
 // Middlewares
-app.use(cors());
 if (process.env.NODE_ENV === "development") {
   console.log("Morgan enabled...");
   app.use(morgan("dev"));
 }
-app.use(bodyParser.json());
+app.use(
+  cors({
+    origin: process.env.CROSS_ORIGIN,
+    credentials: true,
+  })
+);
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.static(path.join(__dirname, "public")));
+app.use(cookieParser());
+
+app.use(express.json({ limit: "16kb" }));
 
 // Routes
 app.use("/api/v1/users", userRouter);

@@ -1,17 +1,24 @@
 import { Router } from "express";
-import { allowFor, isAuth, login, signup } from "../controllers/authController";
+import {
+  forgotPassword,
+  login,
+  signup,
+} from "../controllers/auth.controller.js";
 import {
   deleteUser,
   getAllUsers,
   getUser,
   updateUser,
-} from "../controllers/userController";
-import { Role } from "../types/user";
+} from "../controllers/user.controller.js";
+import { allowFor, isAuth } from "../middlewares/auth.middleware.js";
+import { Role } from "../types/user.type.js";
 
 const router = Router();
 
 router.post("/signup", signup);
 router.post("/login", login);
+router.post("/forgotPassword", forgotPassword);
+// router.post("/resetPassword/:resetToken",resetPassword);
 
 router.get("/", isAuth, allowFor(Role.ADMIN, Role.USER), getAllUsers);
 

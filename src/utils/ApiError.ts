@@ -1,4 +1,4 @@
-class AppError extends Error {
+class ApiError extends Error {
   status: "fail" | "error";
   isOperational: boolean;
 
@@ -11,4 +11,4 @@ class AppError extends Error {
   }
 }
 
-export default AppError;
+export default ApiError;

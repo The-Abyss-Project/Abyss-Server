@@ -1,11 +1,9 @@
-import { NextFunction, Request, RequestHandler, Response } from "express";
-import AppError from "../models/appError";
+import { NextFunction, Response } from "express";
+import { ApiRequest, ApiRequestHandler } from "../types/auth.type.js";
 
-const catchAsync = (
-  cb: (req: Request, res: Response, next: NextFunction) => Promise<any>
-) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    cb(req, res, next).catch(next);
+const catchAsync = (cb: ApiRequestHandler) => {
+  return (req: ApiRequest, res: Response, next: NextFunction) => {
+    Promise.resolve(cb(req, res, next)).catch(err => next(err));
   };
 };
 

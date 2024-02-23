@@ -1,9 +1,10 @@
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { model, Query, Schema } from "mongoose";
-import { IUser, IUserMethods, Role, UserModel } from "../types/user";
+import { IUser, IUserMethods, Role, UserModel } from "../types/user.type.js";
 
-const userSchema = new Schema<IUser, UserModel, IUserMethods>({
-  name: {
+const userSchema = new Schema<IUser, UserModel>({
+  username: {
     type: String,
     required: [true, "Please tell us your name!"],
     unique: true,
@@ -33,6 +34,8 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     default: Role.USER,
   },
   passwordChangedAt: Date,
+  passwordResetToken: String,
+  resetTokenExpires: Date,
 });
 
 userSchema.pre("save", async function (next) {
@@ -59,6 +62,17 @@ userSchema.methods.checkPasswordChangedAfter = function (jwtTimestamp: Date) {
     return jwtTimestamp < this.passwordChangedAt;
   }
   return false;
+};
+
+userSchema.methods.createForgetPasswordToken = function () {
+  const token = crypto.randomBytes(32).toString("hex");
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+  this.resetTokenExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+  return token;
 };
 
 export default model<IUser, UserModel>("User", userSchema);
